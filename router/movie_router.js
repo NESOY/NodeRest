@@ -4,16 +4,16 @@ const movies = require('../model/movie');
 
 
 router.get('/movies/:movieId', showMovieDetail); //READ
-/* CRUD */
-router.post('/movies', addMovie);
-router.get('/movies', showMovieList);
-router.put('/movies', modifyMovie);
-router.delete('/movies', removeMovieList)
 
+router.route('/movies')
+    .get(showMovieList)
+    .post(addMovie)
+    .put(modifyMovie)
+    .delete(removeMovieList);
 
 module.exports = router;
 
-async function showMovieList(req, res) {
+async function showMovieList(req, res, next) {
     try {
         const result = await movies.getMovieList();
         res.send({msg: 'success', data: result});
@@ -24,9 +24,7 @@ async function showMovieList(req, res) {
 
 async function showMovieDetail(req, res) {
     try {
-        // 영화 상세 정보 Id
         const movieId = req.params.movieId;
-        console.log('movieId : ', movieId);
         const info = await movies.getMovieDetail(movieId);
         res.send(info);
     } catch (error) {
@@ -34,7 +32,7 @@ async function showMovieDetail(req, res) {
     }
 }
 
-async function addMovie(req, res) {
+async function addMovie(req, res, next) {
     const title = req.body.title;
     const director = req.body.director;
     const year = parseInt(req.body.year);
@@ -51,11 +49,10 @@ async function addMovie(req, res) {
     }
     catch (error) {
         next(error);
-        //res.status(500).send(error.msg);
     }
 }
 
-async function modifyMovie(req, res) {
+async function modifyMovie(req, res, next) {
     const id = req.body.id;
     const title = req.body.title;
     const director = req.body.director;
@@ -73,11 +70,10 @@ async function modifyMovie(req, res) {
     }
     catch (error) {
         next(error);
-        res.status(500).send(error.msg);
     }
 }
 
-async function removeMovieList(req, res) {
+async function removeMovieList(req, res, next) {
     const id = req.body.id;
     if (!id) {
         res.status(400).send({error: 'Not Find ID'});
@@ -88,6 +84,6 @@ async function removeMovieList(req, res) {
         res.send({msg: 'success Remove Movie', data: result});
     }
     catch (error) {
-        res.status(500).send(error.msg);
+        next(error);
     }
 }

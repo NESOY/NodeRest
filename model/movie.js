@@ -1,24 +1,18 @@
-const fs = require('fs');
 const pool = require('./dbconnect.js');
 
 class Movie {
-    constructor() {
-        const data = fs.readFileSync('./model/data.json');
-        this.data = JSON.parse(data)
-    }
 
-    // Promise 예제
     getMovieList() {
         return new Promise((resolve, reject) => {
             pool.getConnection((err, con) => {
                 if (err) {
-                    reject(err);
+                    reject({message: 'Cannot GET Movie'});
                     return;
                 }
                 let sql = 'SELECT movie_id, title FROM movies';
                 con.query(sql, function (err, results) {
                     if (err) {
-                        reject(err);
+                        reject({message: 'Cannot GET Movie'});
                         return;
                     }
 
@@ -33,13 +27,13 @@ class Movie {
         return new Promise((resolve, reject) => {
             pool.getConnection((err, con) => {
                 if (err) {
-                    reject(err);
+                    reject({message: 'Cannot ADD Movie'});
                     return;
                 }
                 let sql = 'INSERT INTO movies VALUES(null, ?,?,?,?)';
                 con.query(sql, [title, director, year, synopsis], (err, results) => {
                     if (err) {
-                        reject(err);
+                        reject({message: 'Cannot ADD Movie'});
                         return;
                     }
                     con.release();
@@ -54,7 +48,7 @@ class Movie {
     getMovieDetail(movieId) {
         return new Promise((resolve, reject) => {
             for (var movie of this.data) {
-                if (movie.id == movieId) {
+                if (movie.id === movieId) {
                     resolve(movie);
                     return;
                 }
@@ -67,13 +61,13 @@ class Movie {
         return new Promise((resolve, reject) => {
             pool.getConnection((err, con) => {
                 if (err) {
-                    reject({msg: 'Cannot Update Movie', code: 404});
+                    reject({message: 'Cannot Update Movie'});
                     return;
                 }
                 let sql = 'UPDATE movies SET title = ?, director = ?, year = ?, synopsis = ? where movie_id = ?';
                 con.query(sql, [title, director, year, synopsis, movieId], (err, results) => {
-                    if (err) {
-                        reject({msg: 'Cannot Update Movie', code: 404});
+                    if (err || results.affectedRows === 0) {
+                        reject({message: 'Cannot Update Movie'});
                         return;
                     }
                     con.release();
@@ -88,13 +82,14 @@ class Movie {
         return new Promise((resolve, reject) => {
             pool.getConnection((err, con) => {
                 if (err) {
-                    reject({msg: 'Cannot Update Movie', code: 404});
+                    reject({message: 'Cannot Remove Movie'});
                     return;
                 }
                 let sql = 'DELETE FROM movies where movie_id = ?';
                 con.query(sql, [movieId], (err, results) => {
-                    if (err) {
-                        reject({msg: 'Cannot Update Movie', code: 404});
+                    if (err || results.affectedRows === 0) {
+                        console.log('error');
+                        reject({message: 'Cannot Remove Movie'});
                         return;
                     }
                     con.release();
@@ -103,10 +98,7 @@ class Movie {
                 });
             });
         });
-
     }
-
-
 }
 
 module.exports = new Movie();
