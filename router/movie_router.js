@@ -14,9 +14,12 @@ router.delete('/movies',removeMovieList)
 module.exports = router;
 
 function showMovieList(req, res) {
-    const movieList = movies.getMovieList();
-    const result = { data:movieList, count:movieList.length };
-    res.send(result);
+    movies.getMovieList((err,result) =>{
+        if(err){
+            return next(err);
+        }
+        res.send(result);
+    });
 }
 
 

@@ -1,5 +1,5 @@
 const fs = require('fs');
-
+const pool = require('./dbconnect.js');
 
 class Movie {
     constructor() {
@@ -8,13 +8,21 @@ class Movie {
     }
 
     // Promise 예제
-    getMovieList() {
-        if (this.data) {
-            return this.data;
-        }
-        else {
-            return [];
-        }
+    getMovieList(cb) {
+        pool.getConnection(function(err, con) {
+            if ( err ) {
+                return cb(err);
+            }
+            let sql = 'SELECT movie_id, title FROM movies';
+            con.query(sql, function(err, results) {
+                if ( err ) {
+                    return cb(err);
+                }
+
+                con.release();
+                return cb(null, { count : results.length, data : results });
+            });
+        });
     }
 
     addMovie(title, director, year, synopsis) {
@@ -70,6 +78,7 @@ class Movie {
             reject({msg: 'Cannot Remove Movie', code: 404});
         });
     }
+
 
 }
 
