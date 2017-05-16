@@ -8,25 +8,29 @@ class Movie {
     }
 
     // Promise 예제
-    getMovieList(cb) {
-        pool.getConnection((err, con) => {
-            if (err) {
-                return cb(err);
-            }
-            let sql = 'SELECT movie_id, title FROM movies';
-            con.query(sql, function (err, results) {
+    getMovieList() {
+        return new Promise((resolve, reject) => {
+            pool.getConnection((err, con) => {
                 if (err) {
-                    return cb(err);
+                    reject(err);
+                    return;
                 }
+                let sql = 'SELECT movie_id, title FROM movies';
+                con.query(sql, function (err, results) {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
 
-                con.release();
-                return cb(null, {count: results.length, data: results});
+                    con.release();
+                    return resolve({count: results.length, movies: results});
+                });
             });
         });
     }
 
     addMovie(title, director, year, synopsis) {
-        return new Promise((resolve,reject) => {
+        return new Promise((resolve, reject) => {
             pool.getConnection((err, con) => {
                 if (err) {
                     reject(err);
@@ -39,8 +43,8 @@ class Movie {
                         return;
                     }
                     con.release();
-                    resolve({id:results.insertId, title:title, director:director, year:year, synopsis:synopsis});
-                    return ;
+                    resolve({id: results.insertId, title: title, director: director, year: year, synopsis: synopsis});
+                    return;
                 });
             });
         });
@@ -61,17 +65,22 @@ class Movie {
 
     modifyMovie(movieId, title, director, year, synopsis) {
         return new Promise((resolve, reject) => {
-            for (let movie of this.data) {
-                if (movie.id === movieId) {
-                    movie.title = title;
-                    movie.director = director;
-                    movie.year = year;
-                    movie.synopsis = synopsis;
-                    resolve(movie);
+            pool.getConnection((err, con) => {
+                if (err) {
+                    reject({msg: 'Cannot Update Movie', code: 404});
                     return;
                 }
-            }
-            reject({msg: 'Cannot Update Movie', code: 404});
+                let sql = 'UPDATE movies SET title = ?, director = ?, year = ?, synopsis = ? where movie_id = ?';
+                con.query(sql, [title, director, year, synopsis, movieId], (err, results) => {
+                    if (err) {
+                        reject({msg: 'Cannot Update Movie', code: 404});
+                        return;
+                    }
+                    con.release();
+                    resolve({id: movieId, title: title, director: director, year: year, synopsis: synopsis});
+                    return;
+                });
+            });
         });
     }
 
