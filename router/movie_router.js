@@ -38,9 +38,6 @@ async function showMovieDetail(req, res) {
     }
 }
 
-
-// 새 영화 추가
-// POST 요청 분석 -> 바디 파서
 async function addMovie(req, res) {
     const title = req.body.title;
     if (!title) {
@@ -57,7 +54,8 @@ async function addMovie(req, res) {
         res.send({msg:'success', data:result});
     }
     catch ( error ) {
-        res.status(500).send(error.msg);
+        next(err);
+        //res.status(500).send(error.msg);
     }
 }
 

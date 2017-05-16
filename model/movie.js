@@ -9,31 +9,40 @@ class Movie {
 
     // Promise 예제
     getMovieList(cb) {
-        pool.getConnection(function(err, con) {
-            if ( err ) {
+        pool.getConnection((err, con) => {
+            if (err) {
                 return cb(err);
             }
             let sql = 'SELECT movie_id, title FROM movies';
-            con.query(sql, function(err, results) {
-                if ( err ) {
+            con.query(sql, function (err, results) {
+                if (err) {
                     return cb(err);
                 }
 
                 con.release();
-                return cb(null, { count : results.length, data : results });
+                return cb(null, {count: results.length, data: results});
             });
         });
     }
 
     addMovie(title, director, year, synopsis) {
-        return new Promise((resolve, reject) => {
-            let last = this.data[this.data.length - 1];
-            let id = last.id + 1;
-
-            let newMovie = {id: id, title: title, director: director, year: year, synopsis: synopsis};
-            this.data.push(newMovie);
-
-            resolve(newMovie);
+        return new Promise((resolve,reject) => {
+            pool.getConnection((err, con) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                let sql = 'INSERT INTO movies VALUES(null, ?,?,?,?)';
+                con.query(sql, [title, director, year, synopsis], (err, results) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    con.release();
+                    resolve({id:results.insertId, title:title, director:director, year:year, synopsis:synopsis});
+                    return ;
+                });
+            });
         });
     }
 
