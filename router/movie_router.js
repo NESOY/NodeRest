@@ -18,7 +18,7 @@ async function showMovieList(req, res) {
         const result = await movies.getMovieList();
         res.send({msg: 'success', data: result});
     } catch (error) {
-        next(err);
+        next(error);
     }
 }
 
@@ -50,28 +50,29 @@ async function addMovie(req, res) {
         res.send({msg: 'success', data: result});
     }
     catch (error) {
-        next(err);
+        next(error);
         //res.status(500).send(error.msg);
     }
 }
 
 async function modifyMovie(req, res) {
     const id = req.body.id;
-    if (!id) {
-        res.status(400).send({error: 'Not Find ID'});
-        return;
-    }
-
     const title = req.body.title;
     const director = req.body.director;
     const year = parseInt(req.body.year);
     const synopsis = req.body.synopsis;
 
+    if (!title || !year || !director || !synopsis) {
+        res.status(400).send({error: '정보 누락'});
+        return;
+    }
+
     try {
         const result = await movies.modifyMovie(id, title, director, year, synopsis);
-        res.send({msg: 'success Modify Movie', data: result});
+        res.send({msg: 'success', data: result});
     }
     catch (error) {
+        next(error);
         res.status(500).send(error.msg);
     }
 }
@@ -84,7 +85,6 @@ async function removeMovieList(req, res) {
     }
     try {
         const result = await movies.removeMovie(id);
-        console.log('REMOVE IT!');
         res.send({msg: 'success Remove Movie', data: result});
     }
     catch (error) {

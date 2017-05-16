@@ -86,15 +86,24 @@ class Movie {
 
     removeMovie(movieId) {
         return new Promise((resolve, reject) => {
-            for (let movie of this.data) {
-                if (movie.id === movieId) {
-                    this.data.splice(movie.id, 1);
-                    resolve(this.data);
+            pool.getConnection((err, con) => {
+                if (err) {
+                    reject({msg: 'Cannot Update Movie', code: 404});
                     return;
                 }
-            }
-            reject({msg: 'Cannot Remove Movie', code: 404});
+                let sql = 'DELETE FROM movies where movie_id = ?';
+                con.query(sql, [movieId], (err, results) => {
+                    if (err) {
+                        reject({msg: 'Cannot Update Movie', code: 404});
+                        return;
+                    }
+                    con.release();
+                    resolve({id: movieId});
+                    return;
+                });
+            });
         });
+
     }
 
 
